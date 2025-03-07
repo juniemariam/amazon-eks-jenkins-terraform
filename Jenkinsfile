@@ -23,7 +23,7 @@ pipeline {
         }
         stage('Build Docker Image') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 echo '=== Building Petclinic Docker Image ==='
@@ -34,7 +34,7 @@ pipeline {
         }
         stage('Push Docker Image') {
             when {
-                branch 'master'
+                branch 'main'
             }
             steps {
                 echo '=== Pushing Petclinic Docker Image ==='
@@ -51,8 +51,8 @@ pipeline {
         stage('Remove local images') {
             steps {
                 echo '=== Delete the local docker images ==='
-                sh("docker rmi -f ibuchh/petclinic-spinnaker-jenkins:latest || :")
-                sh("docker rmi -f ibuchh/petclinic-spinnaker-jenkins:$SHORT_COMMIT || :")
+                sh("docker rmi -f juniemariam/amazon-eks-jenkins-terraform:latest || :")
+                sh("docker rmi -f juniemariam/amazon-eks-jenkins-terraform:$SHORT_COMMIT || :")
             }
         }
     }
