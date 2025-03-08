@@ -1,18 +1,9 @@
 pipeline {
     agent any
-    triggers {
+       triggers {
         pollSCM "* * * * *"
-    }
+       }
     stages {
-        stage('Initialize') {
-            steps {
-                script {
-                    // Getting the latest commit hash and shortening it
-                    GIT_COMMIT_HASH = sh(script: "git rev-parse HEAD", returnStdout: true).trim()
-                    SHORT_COMMIT = GIT_COMMIT_HASH.take(7)
-                }
-            }
-        }
         stage('Build Application') {
             steps {
                 echo '=== Building Petclinic Application ==='
@@ -37,8 +28,7 @@ pipeline {
             steps {
                 echo '=== Building Petclinic Docker Image ==='
                 script {
-                    // Docker image build step using the defined SHORT_COMMIT for tagging
-                    app = docker.build("juniemariam/amazon-eks-jenkins-terraform:${SHORT_COMMIT}")
+                    app = docker.build("juniemariam/amazon-eks-jenkins-terraform")
                 }
             }
         }
@@ -49,9 +39,10 @@ pipeline {
             steps {
                 echo '=== Pushing Petclinic Docker Image ==='
                 script {
-                    // Pushing the Docker image with the SHORT_COMMIT and latest tags
+                    GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
+                    SHORT_COMMIT = "${GIT_COMMIT_HASH[0..7]}"
                     docker.withRegistry('https://registry.hub.docker.com', 'dockerHubCredentials') {
-                        app.push("${SHORT_COMMIT}")
+                        app.push("$SHORT_COMMIT")
                         app.push("latest")
                     }
                 }
@@ -60,9 +51,8 @@ pipeline {
         stage('Remove local images') {
             steps {
                 echo '=== Delete the local docker images ==='
-                // Deleting the local Docker images to clean up space
-                sh "docker rmi -f juniemariam/amazon-eks-jenkins-terraform:${SHORT_COMMIT} || :"
-                sh "docker rmi -f juniemariam/amazon-eks-jenkins-terraform:latest || :"
+                sh("docker rmi -f juniemariam/amazon-eks-jenkins-terraform:latest || :")
+                sh("docker rmi -f juniemariam/amazon-eks-jenkins-terraform:$SHORT_COMMIT || :")
             }
         }
     }
